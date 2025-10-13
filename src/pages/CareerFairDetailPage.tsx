@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ArrowLeft, Camera, FileText, CheckSquare, Building2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import Loader from '@/components/ui/Loader';
 
 export default function CareerFairDetailPage() {
   const { fairId } = useParams<{ fairId: string }>();
@@ -12,14 +13,24 @@ export default function CareerFairDetailPage() {
   const { currentFair, loadCareerFair, companies, loadCompanies } = useStore();
 
   useEffect(() => {
+    if (fairId === 'new') {
+      // Redirect to /fairs for creating new fair
+      navigate('/fairs');
+      return;
+    }
+
     if (fairId) {
       loadCareerFair(fairId);
       loadCompanies(fairId);
     }
-  }, [fairId, loadCareerFair, loadCompanies]);
+  }, [fairId, loadCareerFair, loadCompanies, navigate]);
 
   if (!currentFair) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader />
+      </div>
+    );
   }
 
   return (

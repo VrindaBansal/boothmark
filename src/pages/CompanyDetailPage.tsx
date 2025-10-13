@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
 import { ArrowLeft, MapPin, Calendar, ExternalLink, Mail, Phone, CheckCircle, Circle, Mic, Square, Play, Trash2, Save } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import Loader from '@/components/ui/Loader';
 
 export default function CompanyDetailPage() {
   const { fairId, companyId } = useParams<{ fairId: string; companyId: string }>();
@@ -151,7 +152,11 @@ export default function CompanyDetailPage() {
   };
 
   if (!currentCompany) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader />
+      </div>
+    );
   }
 
   return (
