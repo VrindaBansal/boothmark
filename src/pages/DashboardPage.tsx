@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Calendar, Building2, ListChecks, Sparkles } from 'lucide-react';
+import { Plus, Calendar, Building2, ListChecks, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAuth } from '@/contexts/AuthContext';
-import { careerFairService } from '@/services/database.service';
+import { careerFairService, checklistService } from '@/services/database.service';
 import WelcomeModal from '@/components/WelcomeModal';
 import Loader from '@/components/ui/Loader';
 
@@ -13,6 +13,8 @@ export default function DashboardPage() {
   const [careerFairs, setCareerFairs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [upcomingFair, setUpcomingFair] = useState<any>(null);
+  const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalFairs: 0,
     upcomingFairs: 0,
@@ -49,10 +51,47 @@ export default function DashboardPage() {
         upcomingFairs: upcoming,
         totalCompanies: 0, // TODO: Calculate from companies table
       });
+
+      // Check for fairs within the next 7 days
+      const oneWeekFromNow = new Date();
+      oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+
+      const fairsWithinWeek = fairs.filter(fair => {
+        const fairDate = new Date(fair.date);
+        return fairDate >= now && fairDate <= oneWeekFromNow;
+      });
+
+      if (fairsWithinWeek.length > 0) {
+        // Get the closest fair
+        const closestFair = fairsWithinWeek.sort((a, b) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        )[0];
+
+        setUpcomingFair(closestFair);
+
+        // Load checklist items for this fair
+        const items = await checklistService.getByCareerFairId(closestFair.id);
+        setChecklistItems(items);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleChecklistItem = async (itemId: string, currentStatus: boolean) => {
+    try {
+      await checklistService.update(itemId, { is_completed: !currentStatus });
+
+      // Update local state
+      setChecklistItems(prev =>
+        prev.map(item =>
+          item.id === itemId ? { ...item, is_completed: !currentStatus } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
     }
   };
 
@@ -83,6 +122,63 @@ export default function DashboardPage() {
           Here's your career fair journey at a glance
         </p>
       </div>
+
+      {/* Upcoming Fair Alert */}
+      {upcomingFair && checklistItems.some(item => !item.is_completed) && (
+        <Card className="border-0 shadow-soft-lg bg-gradient-to-br from-primary/10 to-accent/10">
+          <CardContent className="p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-primary/20 shrink-0">
+                <AlertCircle className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">
+                    You have <span className="text-primary">{upcomingFair.name}</span> coming up!
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(upcomingFair.date)} • Review your prep list
+                  </p>
+                </div>
+
+                {/* Inline Checklist */}
+                <div className="space-y-2">
+                  {checklistItems
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background/80 transition-colors cursor-pointer"
+                        onClick={() => toggleChecklistItem(item.id, item.is_completed)}
+                      >
+                        {item.is_completed ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+                        )}
+                        <span
+                          className={`text-sm ${
+                            item.is_completed
+                              ? 'line-through text-muted-foreground'
+                              : 'text-foreground'
+                          }`}
+                        >
+                          {item.item_text}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+
+                <Link to={`/fairs/${upcomingFair.id}/checklist`}>
+                  <Button variant="outline" size="sm" className="mt-2">
+                    View Full Checklist
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid gap-6 sm:gap-8 md:grid-cols-3">
