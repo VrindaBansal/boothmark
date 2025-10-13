@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Calendar, Settings, LogOut, User, LayoutDashboard } from 'lucide-react';
+import { Calendar, Settings, LogOut, User, LayoutDashboard, FileText, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -71,7 +71,7 @@ export default function Layout() {
             <Link
               to="/dashboard"
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-all duration-300 ease-out relative group',
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] h-full transition-all duration-300 ease-out relative group',
                 isActive('/dashboard')
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -84,14 +84,14 @@ export default function Layout() {
                 'transition-transform duration-300 ease-out',
                 isActive('/dashboard') ? 'scale-110' : 'group-hover:scale-110'
               )}>
-                <LayoutDashboard className={cn('h-6 w-6', isActive('/dashboard') && 'drop-shadow-glow')} />
+                <LayoutDashboard className={cn('h-5 w-5 sm:h-6 sm:w-6', isActive('/dashboard') && 'drop-shadow-glow')} />
               </div>
-              <span className={cn('text-xs font-semibold', isActive('/dashboard') && 'font-bold')}>Dashboard</span>
+              <span className={cn('text-[10px] sm:text-xs font-semibold', isActive('/dashboard') && 'font-bold')}>Dashboard</span>
             </Link>
             <Link
               to="/fairs"
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-all duration-300 ease-out relative group',
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] h-full transition-all duration-300 ease-out relative group',
                 isActive('/fairs')
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -104,14 +104,54 @@ export default function Layout() {
                 'transition-transform duration-300 ease-out',
                 isActive('/fairs') ? 'scale-110' : 'group-hover:scale-110'
               )}>
-                <Calendar className={cn('h-6 w-6', isActive('/fairs') && 'drop-shadow-glow')} />
+                <Calendar className={cn('h-5 w-5 sm:h-6 sm:w-6', isActive('/fairs') && 'drop-shadow-glow')} />
               </div>
-              <span className={cn('text-xs font-semibold', isActive('/fairs') && 'font-bold')}>Fairs</span>
+              <span className={cn('text-[10px] sm:text-xs font-semibold', isActive('/fairs') && 'font-bold')}>Fairs</span>
+            </Link>
+            <Link
+              to="/materials"
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] h-full transition-all duration-300 ease-out relative group',
+                isActive('/materials')
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {isActive('/materials') && (
+                <div className="absolute top-0 w-12 h-1 bg-gradient-to-r from-primary to-accent rounded-b-full animate-scale-in shadow-glow" />
+              )}
+              <div className={cn(
+                'transition-transform duration-300 ease-out',
+                isActive('/materials') ? 'scale-110' : 'group-hover:scale-110'
+              )}>
+                <FileText className={cn('h-5 w-5 sm:h-6 sm:w-6', isActive('/materials') && 'drop-shadow-glow')} />
+              </div>
+              <span className={cn('text-[10px] sm:text-xs font-semibold', isActive('/materials') && 'font-bold')}>Materials</span>
+            </Link>
+            <Link
+              to="/follow-ups"
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] h-full transition-all duration-300 ease-out relative group',
+                isActive('/follow-ups')
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {isActive('/follow-ups') && (
+                <div className="absolute top-0 w-12 h-1 bg-gradient-to-r from-primary to-accent rounded-b-full animate-scale-in shadow-glow" />
+              )}
+              <div className={cn(
+                'transition-transform duration-300 ease-out',
+                isActive('/follow-ups') ? 'scale-110' : 'group-hover:scale-110'
+              )}>
+                <CheckSquare className={cn('h-5 w-5 sm:h-6 sm:w-6', isActive('/follow-ups') && 'drop-shadow-glow')} />
+              </div>
+              <span className={cn('text-[10px] sm:text-xs font-semibold', isActive('/follow-ups') && 'font-bold')}>Follow-Ups</span>
             </Link>
             <Link
               to="/settings"
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[64px] h-full transition-all duration-300 ease-out relative group',
+                'flex flex-col items-center justify-center gap-1 min-w-[48px] h-full transition-all duration-300 ease-out relative group',
                 isActive('/settings')
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -124,9 +164,9 @@ export default function Layout() {
                 'transition-transform duration-300 ease-out',
                 isActive('/settings') ? 'scale-110' : 'group-hover:scale-110'
               )}>
-                <Settings className={cn('h-6 w-6', isActive('/settings') && 'drop-shadow-glow')} />
+                <Settings className={cn('h-5 w-5 sm:h-6 sm:w-6', isActive('/settings') && 'drop-shadow-glow')} />
               </div>
-              <span className={cn('text-xs font-semibold', isActive('/settings') && 'font-bold')}>Settings</span>
+              <span className={cn('text-[10px] sm:text-xs font-semibold', isActive('/settings') && 'font-bold')}>Settings</span>
             </Link>
           </div>
         </div>
