@@ -258,4 +258,3 @@ Built with ❤️ for students navigating career fairs
 ---
 
 **Happy Job Hunting! 🎯**
-# Build timestamp: Mon Oct 13 13:42:56 PDT 2025
