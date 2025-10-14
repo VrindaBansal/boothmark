@@ -1,10 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker - use local copy from node_modules
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+// Configure PDF.js worker - use copy from public directory
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export interface PDFExtractionResult {
   text: string;
