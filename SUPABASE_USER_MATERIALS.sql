@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS user_materials (
   resume_text TEXT,
   resume_parsed JSONB,
   resume_file_name TEXT,
+  resume_file_data TEXT, -- Base64 encoded PDF
   resume_uploaded_at TIMESTAMPTZ,
   elevator_pitch TEXT,
   recruiter_questions JSONB DEFAULT '[]'::jsonb,

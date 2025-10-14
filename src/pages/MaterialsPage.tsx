@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Copy, CheckCircle, Eye, Edit2 } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Copy, CheckCircle, Eye, Edit2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { generateElevatorPitch, generateRecruiterQuestions, parseResume, ParsedResume, RecruiterQuestion } from '@/services/ai-prep';
 import Loader from '@/components/ui/Loader';
+import Toast from '@/components/ui/Toast';
 import { extractFromPDF } from '@/services/pdf';
 
 export default function MaterialsPage() {
@@ -16,6 +17,7 @@ export default function MaterialsPage() {
   const [resumeText, setResumeText] = useState('');
   const [resumeParsed, setResumeParsed] = useState<ParsedResume | null>(null);
   const [resumeFileName, setResumeFileName] = useState('');
+  const [resumeFileData, setResumeFileData] = useState<string>('');
   const [elevatorPitch, setElevatorPitch] = useState('');
   const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[]>([]);
   const [targetRoles, setTargetRoles] = useState('');
@@ -26,9 +28,10 @@ export default function MaterialsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [copiedPitch, setCopiedPitch] = useState(false);
   const [copiedQuestion, setCopiedQuestion] = useState<number | null>(null);
-  const [showResumeText, setShowResumeText] = useState(false);
+  const [showResumePDF, setShowResumePDF] = useState(false);
   const [isEditingParsed, setIsEditingParsed] = useState(false);
   const [editedParsed, setEditedParsed] = useState<ParsedResume | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadMaterials();
@@ -53,6 +56,7 @@ export default function MaterialsPage() {
         setResumeText(data.resume_text || '');
         setResumeParsed(data.resume_parsed);
         setResumeFileName(data.resume_file_name || '');
+        setResumeFileData(data.resume_file_data || '');
         setElevatorPitch(data.elevator_pitch || '');
         setRecruiterQuestions(data.recruiter_questions || []);
         setTargetRoles(data.target_roles || '');
@@ -71,19 +75,28 @@ export default function MaterialsPage() {
     try {
       setIsParsingResume(true);
       let text = '';
+      let fileData = '';
 
       if (file.type === 'application/pdf') {
         const result = await extractFromPDF(file);
         text = result.text;
+
+        // Convert PDF to base64 for storage
+        const reader = new FileReader();
+        fileData = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
       } else if (file.type === 'text/plain') {
         text = await file.text();
       } else {
-        alert('Please upload a PDF or TXT file');
+        setToastMessage('Please upload a PDF or TXT file');
         return;
       }
 
       setResumeText(text);
       setResumeFileName(file.name);
+      setResumeFileData(fileData);
 
       // Parse resume with AI
       const parsed = await parseResume(text);
@@ -93,13 +106,14 @@ export default function MaterialsPage() {
         resume_text: text,
         resume_parsed: parsed,
         resume_file_name: file.name,
+        resume_file_data: fileData,
         resume_uploaded_at: new Date().toISOString()
       });
 
-      alert('Resume uploaded and parsed successfully!');
+      setToastMessage('Resume uploaded and parsed successfully!');
     } catch (error) {
       console.error('Error uploading resume:', error);
-      alert('Failed to process resume');
+      setToastMessage('Failed to process resume');
     } finally {
       setIsParsingResume(false);
     }
@@ -107,7 +121,7 @@ export default function MaterialsPage() {
 
   const handleGeneratePitch = async () => {
     if (!resumeText) {
-      alert('Please upload a resume first');
+      setToastMessage('Please upload a resume first');
       return;
     }
 
@@ -119,9 +133,10 @@ export default function MaterialsPage() {
       );
       setElevatorPitch(pitch);
       await saveMaterials({ elevator_pitch: pitch });
+      setToastMessage('Elevator pitch generated successfully!');
     } catch (error) {
       console.error('Error generating pitch:', error);
-      alert('Failed to generate elevator pitch');
+      setToastMessage('Failed to generate elevator pitch');
     } finally {
       setIsGeneratingPitch(false);
     }
@@ -129,7 +144,7 @@ export default function MaterialsPage() {
 
   const handleGenerateQuestions = async () => {
     if (!resumeText) {
-      alert('Please upload a resume first');
+      setToastMessage('Please upload a resume first');
       return;
     }
 
@@ -141,9 +156,10 @@ export default function MaterialsPage() {
       );
       setRecruiterQuestions(questions);
       await saveMaterials({ recruiter_questions: questions });
+      setToastMessage('Questions generated successfully!');
     } catch (error) {
       console.error('Error generating questions:', error);
-      alert('Failed to generate questions');
+      setToastMessage('Failed to generate questions');
     } finally {
       setIsGeneratingQuestions(false);
     }
@@ -272,14 +288,16 @@ export default function MaterialsPage() {
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm">Parsed Information:</h4>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowResumeText(!showResumeText)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    {showResumeText ? 'Hide' : 'View'} Resume
-                  </Button>
+                  {resumeFileData && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowResumePDF(true)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Resume
+                    </Button>
+                  )}
                   {!isEditingParsed && (
                     <Button
                       size="sm"
@@ -407,17 +425,6 @@ export default function MaterialsPage() {
             </div>
           )}
 
-          {showResumeText && resumeText && (
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Full Resume Text:</h4>
-              <Textarea
-                value={resumeText}
-                readOnly
-                rows={15}
-                className="resize-none font-mono text-xs"
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -577,6 +584,39 @@ export default function MaterialsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* PDF Viewer Modal */}
+      {showResumePDF && resumeFileData && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-semibold text-lg">{resumeFileName}</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowResumePDF(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <iframe
+                src={resumeFileData}
+                className="w-full h-full border-0"
+                title="Resume PDF Viewer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </div>
   );
 }
