@@ -4,12 +4,12 @@ import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { Plus, Calendar, MapPin } from 'lucide-react';
+import { Plus, Calendar, MapPin, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { CareerFair } from '@/types';
 
 export default function CareerFairsPage() {
-  const { careerFairs, loadCareerFairs, saveCareerFair } = useStore();
+  const { careerFairs, loadCareerFairs, saveCareerFair, deleteCareerFair } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +38,15 @@ export default function CareerFairsPage() {
     await saveCareerFair(newFair);
     setFormData({ name: '', date: '', location: '', notes: '' });
     setShowForm(false);
+  };
+
+  const handleDelete = async (e: React.MouseEvent, fairId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (window.confirm('Are you sure you want to delete this career fair? This will also delete all associated companies and checklist items.')) {
+      await deleteCareerFair(fairId);
+    }
   };
 
   const upcomingFairs = careerFairs.filter(fair => new Date(fair.date) >= new Date());
@@ -111,7 +120,15 @@ export default function CareerFairsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {upcomingFairs.map(fair => (
               <Link key={fair.id} to={`/fairs/${fair.id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer relative group">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => handleDelete(e, fair.id)}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                   <CardHeader>
                     <CardTitle>{fair.name}</CardTitle>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
@@ -143,7 +160,15 @@ export default function CareerFairsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             {pastFairs.map(fair => (
               <Link key={fair.id} to={`/fairs/${fair.id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer opacity-75">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer opacity-75 relative group">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => handleDelete(e, fair.id)}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                   <CardHeader>
                     <CardTitle>{fair.name}</CardTitle>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
