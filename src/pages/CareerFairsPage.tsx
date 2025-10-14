@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Plus, Calendar, MapPin, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { CareerFair } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { careerFairService } from '@/services/database.service';
+import Loader from '@/components/ui/Loader';
 
 export default function CareerFairsPage() {
-  const { careerFairs, loadCareerFairs, saveCareerFair, deleteCareerFair } = useStore();
+  const { user } = useAuth();
+  const [careerFairs, setCareerFairs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -20,24 +23,43 @@ export default function CareerFairsPage() {
 
   useEffect(() => {
     loadCareerFairs();
-  }, [loadCareerFairs]);
+  }, [user]);
+
+  const loadCareerFairs = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      const fairs = await careerFairService.getAll(user.id);
+      setCareerFairs(fairs);
+    } catch (error) {
+      console.error('Error loading career fairs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newFair: CareerFair = {
-      id: crypto.randomUUID(),
-      name: formData.name,
-      date: new Date(formData.date),
-      location: formData.location,
-      notes: formData.notes || undefined,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    if (!user) return;
 
-    await saveCareerFair(newFair);
-    setFormData({ name: '', date: '', location: '', notes: '' });
-    setShowForm(false);
+    try {
+      await careerFairService.create({
+        user_id: user.id,
+        name: formData.name,
+        date: formData.date,
+        location: formData.location,
+        notes: formData.notes || null,
+      });
+
+      setFormData({ name: '', date: '', location: '', notes: '' });
+      setShowForm(false);
+      await loadCareerFairs();
+    } catch (error) {
+      console.error('Error creating career fair:', error);
+      alert('Failed to create career fair');
+    }
   };
 
   const handleDelete = async (e: React.MouseEvent, fairId: string) => {
@@ -45,12 +67,26 @@ export default function CareerFairsPage() {
     e.stopPropagation();
 
     if (window.confirm('Are you sure you want to delete this career fair? This will also delete all associated companies and checklist items.')) {
-      await deleteCareerFair(fairId);
+      try {
+        await careerFairService.delete(fairId);
+        await loadCareerFairs();
+      } catch (error) {
+        console.error('Error deleting career fair:', error);
+        alert('Failed to delete career fair');
+      }
     }
   };
 
   const upcomingFairs = careerFairs.filter(fair => new Date(fair.date) >= new Date());
   const pastFairs = careerFairs.filter(fair => new Date(fair.date) < new Date());
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
