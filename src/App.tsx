@@ -10,6 +10,8 @@ import CompaniesPage from './pages/CompaniesPage';
 import CompanyDetailPage from './pages/CompanyDetailPage';
 import ScanPage from './pages/ScanPage';
 import ChecklistPage from './pages/ChecklistPage';
+import MaterialsPage from './pages/MaterialsPage';
+import FollowUpsPage from './pages/FollowUpsPage';
 import SettingsPage from './pages/SettingsPage';
 
 function App() {
@@ -72,6 +74,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ScanPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="materials"
+              element={
+                <ProtectedRoute>
+                  <MaterialsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="follow-ups"
+              element={
+                <ProtectedRoute>
+                  <FollowUpsPage />
                 </ProtectedRoute>
               }
             />
