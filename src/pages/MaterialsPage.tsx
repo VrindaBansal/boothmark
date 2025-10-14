@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Copy, CheckCircle } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Copy, CheckCircle, Eye, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
@@ -26,6 +26,9 @@ export default function MaterialsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [copiedPitch, setCopiedPitch] = useState(false);
   const [copiedQuestion, setCopiedQuestion] = useState<number | null>(null);
+  const [showResumeText, setShowResumeText] = useState(false);
+  const [isEditingParsed, setIsEditingParsed] = useState(false);
+  const [editedParsed, setEditedParsed] = useState<ParsedResume | null>(null);
 
   useEffect(() => {
     loadMaterials();
@@ -186,6 +189,23 @@ export default function MaterialsPage() {
     }
   };
 
+  const handleSaveParsedInfo = async () => {
+    if (!editedParsed) return;
+    setResumeParsed(editedParsed);
+    await saveMaterials({ resume_parsed: editedParsed });
+    setIsEditingParsed(false);
+  };
+
+  const handleEditParsed = () => {
+    setEditedParsed(resumeParsed);
+    setIsEditingParsed(true);
+  };
+
+  const updateEditedParsed = (field: keyof ParsedResume, value: any) => {
+    if (!editedParsed) return;
+    setEditedParsed({ ...editedParsed, [field]: value });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -219,9 +239,8 @@ export default function MaterialsPage() {
             <label htmlFor="resume-upload" className="cursor-pointer">
               <div className="border-2 border-dashed border-border rounded-lg p-8 hover:border-primary transition-colors text-center">
                 {isParsingResume ? (
-                  <div className="space-y-2">
-                    <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Parsing resume...</p>
+                  <div className="flex items-center justify-center">
+                    <Loader />
                   </div>
                 ) : resumeFileName ? (
                   <div className="space-y-2">
@@ -250,37 +269,153 @@ export default function MaterialsPage() {
 
           {resumeParsed && (
             <div className="space-y-3 bg-secondary/30 p-4 rounded-lg">
-              <h4 className="font-medium text-sm">Parsed Information:</h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Name:</span>
-                  <p className="font-medium">{resumeParsed.name}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">School:</span>
-                  <p className="font-medium">{resumeParsed.school}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Major:</span>
-                  <p className="font-medium">{resumeParsed.major}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Graduation:</span>
-                  <p className="font-medium">{resumeParsed.graduationYear}</p>
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm">Parsed Information:</h4>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowResumeText(!showResumeText)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    {showResumeText ? 'Hide' : 'View'} Resume
+                  </Button>
+                  {!isEditingParsed && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditParsed}
+                    >
+                      <Edit2 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </div>
-              {resumeParsed.skills.length > 0 && (
-                <div>
-                  <span className="text-muted-foreground text-sm">Skills:</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {resumeParsed.skills.slice(0, 10).map((skill, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
-                        {skill}
-                      </span>
-                    ))}
+
+              {isEditingParsed && editedParsed ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground">Name</label>
+                      <Input
+                        value={editedParsed.name}
+                        onChange={(e) => updateEditedParsed('name', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Email</label>
+                      <Input
+                        value={editedParsed.email || ''}
+                        onChange={(e) => updateEditedParsed('email', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">School</label>
+                      <Input
+                        value={editedParsed.school}
+                        onChange={(e) => updateEditedParsed('school', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Major</label>
+                      <Input
+                        value={editedParsed.major}
+                        onChange={(e) => updateEditedParsed('major', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Graduation Year</label>
+                      <Input
+                        value={editedParsed.graduationYear}
+                        onChange={(e) => updateEditedParsed('graduationYear', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">GPA</label>
+                      <Input
+                        value={editedParsed.gpa || ''}
+                        onChange={(e) => updateEditedParsed('gpa', e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Skills (comma-separated)</label>
+                    <Input
+                      value={editedParsed.skills.join(', ')}
+                      onChange={(e) => updateEditedParsed('skills', e.target.value.split(',').map(s => s.trim()))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveParsedInfo} disabled={isSaving}>
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setIsEditingParsed(false)}>
+                      Cancel
+                    </Button>
                   </div>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Name:</span>
+                      <p className="font-medium">{resumeParsed.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{resumeParsed.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">School:</span>
+                      <p className="font-medium">{resumeParsed.school}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Major:</span>
+                      <p className="font-medium">{resumeParsed.major}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Graduation:</span>
+                      <p className="font-medium">{resumeParsed.graduationYear}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">GPA:</span>
+                      <p className="font-medium">{resumeParsed.gpa || 'N/A'}</p>
+                    </div>
+                  </div>
+                  {resumeParsed.skills.length > 0 && (
+                    <div>
+                      <span className="text-muted-foreground text-sm">Skills:</span>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {resumeParsed.skills.map((skill, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-primary/10 text-primary rounded-md text-xs">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
+            </div>
+          )}
+
+          {showResumeText && resumeText && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Full Resume Text:</h4>
+              <Textarea
+                value={resumeText}
+                readOnly
+                rows={15}
+                className="resize-none font-mono text-xs"
+              />
             </div>
           )}
         </CardContent>
