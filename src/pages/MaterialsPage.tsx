@@ -411,7 +411,7 @@ export default function MaterialsPage() {
                   <div key={category} className="space-y-2">
                     <h4 className="font-semibold text-sm text-primary">{category}</h4>
                     <div className="space-y-2">
-                      {categoryQuestions.map((q, idx) => {
+                      {categoryQuestions.map((q) => {
                         const globalIdx = recruiterQuestions.indexOf(q);
                         return (
                           <div

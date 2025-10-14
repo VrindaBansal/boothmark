@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckSquare, Mail, Linkedin, Coffee, Briefcase, Copy, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, Linkedin, Coffee, Briefcase, Copy, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';

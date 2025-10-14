@@ -160,6 +160,10 @@ export const checklistService = {
     return data as ChecklistItem[];
   },
 
+  async getByCareerFairId(careerFairId: string) {
+    return this.getAll(careerFairId);
+  },
+
   async create(item: ChecklistItemInsert) {
     const { data, error } = await supabase
       .from('prep_checklist_items')
